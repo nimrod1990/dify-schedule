@@ -1,0 +1,64 @@
+name: Daily News Fetch and Send to WeChat
+
+on:
+  schedule:
+    # 设置每天的某个时间触发工作流（例如：每天 8:00 AM UTC）
+    - cron: '0 8 * * *'
+
+jobs:
+  fetch-and-send-news:
+    runs-on: ubuntu-latest  # 使用 Ubuntu 作为运行环境
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # 检出代码库
+
+      - name: Set up Python
+        uses: actions/setup-python@v2  # 设置 Python 环境
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install newspaper3k openai itchat  # 安装新闻抓取库、OpenAI API 和 itchat 库
+
+      - name: Fetch News and Interpret with AI
+        run: |
+          # 使用 Python 脚本抓取新闻
+          python <<EOF
+import openai
+import itchat
+from newspaper import Article
+
+# 微信登录
+itchat.auto_login(hotReload=True)
+
+# 获取新闻文章
+def fetch_news():
+    url = 'https://www.example.com/latest-news'  # 用你选择的新闻源替换这个 URL
+    article = Article(url)
+    article.download()
+    article.parse()
+    return article.title + '\n' + article.text
+
+# 使用 OpenAI API 解读新闻
+def interpret_news(news):
+    openai.api_key = 'your-openai-api-key'  # 替换为你的 OpenAI API 密钥
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=f"Please summarize the following news article:\n\n{news}",
+        max_tokens=200
+    )
+    return response.choices[0].text.strip()
+
+# 获取新闻并解读
+news = fetch_news()
+summary = interpret_news(news)
+
+# 发送解读结果到微信
+itchat.send(summary, toUserName='filehelper')  # 将解读结果发送到微信文件助手，可以替换为其他联系人
+EOF
+
+      - name: Finish
+        run: echo "News fetched, interpreted, and sent to WeChat."
