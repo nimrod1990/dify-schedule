@@ -40,13 +40,15 @@ def fetch_news():
     article = Article(url)
     article.download()
     article.parse()
-    return article.title + '\n' + article.text
+    return article.title + '\\n' + article.text
 
-# 使用 OpenAI API 解读新闻
+# 使用自定义 OpenAI API 解读新闻
 def interpret_news(news):
-    openai.api_key = 'your-openai-api-key'  # 替换为你的 OpenAI API 密钥
+    # 使用你的 OpenAI 自定义端点
+    openai.api_base = 'https://your-custom-openai-endpoint.com/v1'  # 自定义 OpenAI 端点
+    openai.api_key = '${{ secrets.OPENAI_API_KEY }}'  # 使用 GitHub Secrets 中存储的 OpenAI 密钥
     response = openai.Completion.create(
-        model="text-davinci-003",
+        model="gpt-4o-mini",  # 使用 gpt-4o-mini 模型
         prompt=f"Please summarize the following news article:\n\n{news}",
         max_tokens=200
     )
