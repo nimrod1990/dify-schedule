@@ -42,16 +42,14 @@ jobs:
               return f"{article.title}\n\n{article.text}"
       
           def interpret_news(news):
-              # 调试输出验证密钥是否获取成功
               print("API Key exists:", bool(os.getenv("OPENAI_API_KEY")))
-              
               client = OpenAI(
                   base_url = "https://api.chatanywhere.com.cn/v1",
                   api_key = os.environ["OPENAI_API_KEY"]  # 使用更明确的获取方式
               )
               
               response = client.chat.completions.create(
-                  model="gpt-3.5-turbo",
+                  model="gpt-4o mini",
                   messages=[{
                       "role": "user",
                       "content": f"请用中文总结这篇新闻，控制在200字内：\n\n{news}"
