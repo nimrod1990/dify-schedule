@@ -65,7 +65,7 @@ jobs:
                   
                   # URL编码处理
                   from urllib.parse import quote
-                  encoded_msg = quote(f"新闻摘要：\n{summary}")
+                  encoded_msg = f"新闻摘要：\n{summary}"
                   
                   requests.get(
                       f"https://sctapi.ftqq.com/{sckey}.send",
