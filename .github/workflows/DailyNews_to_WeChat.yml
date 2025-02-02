@@ -40,7 +40,7 @@ jobs:
 
           # 使用自定义 OpenAI API 解读新闻
           def interpret_news(news):
-              openai.api_base = 'https://your-custom-openai-endpoint.com/v1'  # 自定义 OpenAI 端点
+              openai.api_base = 'https://api.chatanywhere.com.cn/v1'  # 自定义 OpenAI 端点
               openai.api_key = '${{ secrets.OPENAI_API_KEY }}'  # 从 GitHub Secrets 中获取 OpenAI API 密钥
               response = openai.Completion.create(
                   model="gpt-4o-mini",  # 使用 gpt-4o-mini 模型
