@@ -4,6 +4,7 @@ on:
   schedule:
     # 设置每天的某个时间触发工作流（例如：每天 8:00 AM UTC）
     - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   fetch-and-send-news:
@@ -21,18 +22,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install newspaper3k openai itchat  # 安装新闻抓取库、OpenAI API 和 itchat 库
+          pip install newspaper3k openai requests  # 安装新闻抓取库、OpenAI API 和 requests 库
 
       - name: Fetch News and Interpret with AI
         run: |
           # 使用 Python 脚本抓取新闻
           python <<EOF
 import openai
-import itchat
+import requests
 from newspaper import Article
-
-# 微信登录
-itchat.auto_login(hotReload=True)
 
 # 获取新闻文章
 def fetch_news():
@@ -44,7 +42,6 @@ def fetch_news():
 
 # 使用自定义 OpenAI API 解读新闻
 def interpret_news(news):
-    # 使用你的 OpenAI 自定义端点
     openai.api_base = 'https://api.chatanywhere.com.cn/v1'  # 自定义 OpenAI 端点
     openai.api_key = '${{ secrets.OPENAI_API_KEY }}'  # 使用 GitHub Secrets 中存储的 OpenAI 密钥
     response = openai.Completion.create(
@@ -59,7 +56,9 @@ news = fetch_news()
 summary = interpret_news(news)
 
 # 发送解读结果到微信
-itchat.send(summary, toUserName='filehelper')  # 将解读结果发送到微信文件助手，可以替换为其他联系人
+sckey = '${{ secrets.SERVERPUSHKEY }}'  # 从 GitHub Secrets 中获取 SERVERPUSHKEY
+message = f"新闻摘要：\n{summary}"
+requests.get(f"https://sc.ftqq.com/{sckey}.send?text=每日新闻摘要&desp={message}")
 EOF
 
       - name: Finish
