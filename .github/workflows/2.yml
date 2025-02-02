@@ -107,3 +107,7 @@ jobs:
               except Exception as e:
                   print(f"程序执行失败: {str(e)}")
                   raise
+          EOF
+          
+      - name: Finish
+        run: echo "News fetched, interpreted, and sent to WeChat."
