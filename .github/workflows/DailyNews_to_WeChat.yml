@@ -75,8 +75,8 @@ jobs:
                       }
                   )
               except Exception as e:
-              print(f"程序执行失败: {str(e)}")
-              raise
+                  print(f"程序执行失败: {str(e)}")
+                  raise
           EOF
           
       - name: Finish
