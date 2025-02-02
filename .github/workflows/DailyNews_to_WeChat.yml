@@ -2,8 +2,7 @@ name: Daily News Fetch and Send to WeChat
 
 on:
   schedule:
-    # 设置每天的某个时间触发工作流（例如：每天 8:00 AM UTC）
-    - cron: '0 8 * * *'
+    - cron: '0 8 : 0 0'
   workflow_dispatch:
 
 jobs:
@@ -30,32 +29,26 @@ jobs:
           import openai
           import requests
           from newspaper import Article
-          # 获取新闻文章
           def fetch_news():
           url = 'rsshub://twitter/media/435hz'
           article = Article(url)
           article.download()
           article.parse()
           return article.title + '\\n' + article.text
-
-          # 使用自定义 OpenAI API 解读新闻
           def interpret_news(news):
-              openai.api_base = 'https://api.chatanywhere.com.cn/v1'  # 自定义 OpenAI 端点
-              openai.api_key = '${{ secrets.OPENAI_API_KEY }}'  # 从 GitHub Secrets 中获取 OpenAI API 密钥
-              response = openai.Completion.create(
-                  model="gpt-4o-mini",  # 使用 gpt-4o-mini 模型
-                  prompt=f"Please summarize the following news article:\n\n{news}",
-                  max_tokens=200
-              )
-              return response.choices[0].text.strip()
-          
-          # 主流程：抓取新闻、解读、并通过 Server 酱发送
+          openai.api_base = 'https://api.chatanywhere.com.cn/v1'
+          openai.api_key = '${{ secrets.OPENAI_API_KEY }}'
+          response = openai.Completion.create(
+          model="gpt-4o-mini",
+          prompt=f"Please summarize the following news article:\n\n{news}",
+          max_tokens=200)
+          return response.choices[0].text.strip()
           news = fetch_news()
           summary = interpret_news(news)
-          sckey = '${{ secrets.SERVERPUSHKEY }}'  # 从 GitHub Secrets 中获取 Server 酱推送密钥
+          sckey = '${{ secrets.SERVERPUSHKEY }}'
           message = f"新闻摘要：\n{summary}"
           requests.get(f"https://sc.ftqq.com/{sckey}.send?text=每日新闻摘要&desp={message}")
           EOF
           
-                - name: Finish
-                  run: echo "News fetched, interpreted, and sent to WeChat."
+      - name: Finish
+        run: echo "News fetched, interpreted, and sent to WeChat."
