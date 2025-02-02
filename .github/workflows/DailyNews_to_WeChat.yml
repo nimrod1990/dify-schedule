@@ -8,25 +8,24 @@ on:
 
 jobs:
   fetch-and-send-news:
-    runs-on: ubuntu-latest  # 使用 Ubuntu 作为运行环境
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2  # 检出代码库
+        uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v2  # 设置 Python 环境
+        uses: actions/setup-python@v2
         with:
           python-version: '3.9'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install newspaper3k openai requests  # 安装新闻抓取库、OpenAI API 和 requests 库
+          pip install newspaper3k openai requests
 
       - name: Fetch News and Interpret with AI
         run: |
-          # 使用 Python 脚本抓取新闻
           python <<EOF
 import openai
 import requests
@@ -34,7 +33,7 @@ from newspaper import Article
 
 # 获取新闻文章
 def fetch_news():
-    url = 'rsshub://twitter/media/435hz'  # 用你选择的新闻源替换这个 URL
+    url = 'https://www.example.com/latest-news'  # 请替换为你选择的新闻源 URL
     article = Article(url)
     article.download()
     article.parse()
@@ -42,8 +41,8 @@ def fetch_news():
 
 # 使用自定义 OpenAI API 解读新闻
 def interpret_news(news):
-    openai.api_base = 'https://api.chatanywhere.com.cn/v1'  # 自定义 OpenAI 端点
-    openai.api_key = '${{ secrets.OPENAI_API_KEY }}'  # 使用 GitHub Secrets 中存储的 OpenAI 密钥
+    openai.api_base = 'https://your-custom-openai-endpoint.com/v1'  # 自定义 OpenAI 端点
+    openai.api_key = '${{ secrets.OPENAI_API_KEY }}'  # 从 GitHub Secrets 中获取 OpenAI API 密钥
     response = openai.Completion.create(
         model="gpt-4o-mini",  # 使用 gpt-4o-mini 模型
         prompt=f"Please summarize the following news article:\n\n{news}",
@@ -51,12 +50,10 @@ def interpret_news(news):
     )
     return response.choices[0].text.strip()
 
-# 获取新闻并解读
+# 主流程：抓取新闻、解读、并通过 Server 酱发送
 news = fetch_news()
 summary = interpret_news(news)
-
-# 发送解读结果到微信
-sckey = '${{ secrets.SERVERPUSHKEY }}'  # 从 GitHub Secrets 中获取 SERVERPUSHKEY
+sckey = '${{ secrets.SERVERPUSHKEY }}'  # 从 GitHub Secrets 中获取 Server 酱推送密钥
 message = f"新闻摘要：\n{summary}"
 requests.get(f"https://sc.ftqq.com/{sckey}.send?text=每日新闻摘要&desp={message}")
 EOF
