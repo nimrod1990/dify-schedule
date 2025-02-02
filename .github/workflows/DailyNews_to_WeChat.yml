@@ -48,7 +48,7 @@ jobs:
               sckey = '${{ secrets.SERVERPUSHKEY }}'
               message = f"新闻摘要：\n{summary}"
               requests.get(f"https://sc.ftqq.com/{sckey}.send?text=每日新闻摘要&desp={message}")
-              EOF
+          EOF
           
       - name: Finish
         run: echo "News fetched, interpreted, and sent to WeChat."
