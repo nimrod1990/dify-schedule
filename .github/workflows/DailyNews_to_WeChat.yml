@@ -25,25 +25,28 @@ jobs:
 
       - name: Fetch News and Interpret with AI
         run: |
-          python <<EOF
+          python << 'EOF'
           import openai
           import requests
           from newspaper import Article
+      
           def fetch_news():
               url = 'https://www.bbc.com/news'
               article = Article(url)
               article.download()
               article.parse()
-              return article.title + '\\n' + article.text
+              return article.title + '\n' + article.text
+      
           def interpret_news(news):
               openai.api_base = 'https://api.chatanywhere.com.cn/v1'
               openai.api_key = '${{ secrets.OPENAI_API_KEY }}'
               response = openai.Completion.create(
-              model="gpt-4o-mini",
-              prompt=f"Please summarize the following news article:\n\n{news}",
-              max_tokens=200)
+                  model="gpt-4o-mini",
+                  prompt=f"Please summarize the following news article:\n\n{news}",
+                  max_tokens=200
+              )
               return response.choices[0].text.strip()
-              
+      
           if __name__ == "__main__":
               news = fetch_news()
               summary = interpret_news(news)
