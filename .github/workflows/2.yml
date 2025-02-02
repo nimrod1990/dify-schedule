@@ -76,7 +76,7 @@ jobs:
                   model="gpt-4o-mini",
                   messages=[{
                       "role": "user",
-                      "content": f"请用中文总结这篇新闻，控制在200字内：\n\n{news}"
+                      "content": f"请用中文结构化呈现这些新闻，不遗漏信息：\n\n{news}"
                   }]
               )
               return response.choices[0].message.content
