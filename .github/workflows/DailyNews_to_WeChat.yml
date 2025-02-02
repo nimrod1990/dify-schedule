@@ -43,6 +43,8 @@ jobs:
               prompt=f"Please summarize the following news article:\n\n{news}",
               max_tokens=200)
               return response.choices[0].text.strip()
+              
+          if __name__ == "__main__":
               news = fetch_news()
               summary = interpret_news(news)
               sckey = '${{ secrets.SERVERPUSHKEY }}'
