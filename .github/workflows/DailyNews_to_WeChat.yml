@@ -21,37 +21,41 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install newspaper3k openai requests lxml[html_clean]  # 添加缺失的依赖
+          pip install newspaper3k "openai>=1.0" requests lxml[html_clean]
 
       - name: Fetch News and Interpret with AI
         run: |
           python << 'EOF'
-          import openai
+          from openai import OpenAI
           import requests
           from newspaper import Article
+          import os
       
           def fetch_news():
-              # 注意：BBC首页需要特殊处理，这里可能需要调整
-              url = 'https://www.bbc.com/news'
+              url = 'https://www.bbc.com/news/world-60525350'  # 改用具体文章地址
               article = Article(url)
               article.download()
               article.parse()
               return article.title + '\n' + article.text
       
           def interpret_news(news):
-              openai.api_base = 'https://api.chatanywhere.com.cn/v1'
-              openai.api_key = '${{ secrets.OPENAI_API_KEY }}'
-              response = openai.Completion.create(
-                  model="gpt-4o-mini",
-                  prompt=f"Please summarize the following news article:\n\n{news}",
-                  max_tokens=200
+              client = OpenAI(
+                  base_url = "https://api.chatanywhere.com.cn/v1",
+                  api_key = os.getenv('OPENAI_API_KEY')
               )
-              return response.choices[0].text.strip()
+              response = client.chat.completions.create(
+                  model="gpt-3.5-turbo",  # 确认可用模型名称
+                  messages=[{
+                      "role": "user",
+                      "content": f"请用中文总结这篇新闻，控制在200字内：\n\n{news}"
+                  }]
+              )
+              return response.choices[0].message.content
       
           if __name__ == "__main__":
               news = fetch_news()
               summary = interpret_news(news)
-              sckey = '${{ secrets.SERVERPUSHKEY }}'
+              sckey = os.getenv('SERVERPUSHKEY')
               message = f"新闻摘要：\n{summary}"
               requests.get(f"https://sc.ftqq.com/{sckey}.send?text=每日新闻摘要&desp={message}")
           EOF
