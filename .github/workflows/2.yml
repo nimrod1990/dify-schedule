@@ -73,7 +73,7 @@ jobs:
               )
               
               response = client.chat.completions.create(
-                  model="gpt-4o mini",
+                  model="gpt-4o-mini",
                   messages=[{
                       "role": "user",
                       "content": f"请用中文总结这篇新闻，控制在200字内：\n\n{news}"
