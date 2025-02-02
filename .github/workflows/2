@@ -1,0 +1,82 @@
+from openai import OpenAI
+import requests
+from newspaper import Article, Config
+from bs4 import BeautifulSoup
+import os
+
+# 配置：防止报错的User-Agent
+config = Config()
+config.browser_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+
+def fetch_news():
+    # 提供新闻源 URL
+    url = 'https://www.bbc.com/innovation/artificial-intelligence'
+    
+    # 请求页面并解析
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    # 找到所有新闻链接，BBC的新闻链接一般都在 <a> 标签内
+    article_links = []
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        # 确保链接是有效的新闻链接，且以 "https" 开头
+        if href.startswith('/innovation/artificial-intelligence') or href.startswith('https://www.bbc.com/innovation/artificial-intelligence'):
+            article_links.append(f"https://www.bbc.com{href}" if not href.startswith('https://') else href)
+    
+    # 去重链接（防止重复）
+    article_links = list(set(article_links))
+    
+    news_list = []
+    
+    # 遍历每个新闻链接，抓取内容
+    for link in article_links:
+        article = Article(link, config=config)
+        article.download()
+        article.parse()
+        news_list.append(f"{article.title}\n\n{article.text}")
+    
+    return "\n\n".join(news_list)  # 将所有新闻拼接成一段返回
+
+def interpret_news(news):
+    print("API Key exists:", bool(os.getenv("OPENAI_API_KEY")))
+    client = OpenAI(
+        base_url = "https://api.chatanywhere.com.cn/v1",
+        api_key = os.environ["OPENAI_API_KEY"]
+    )
+    
+    response = client.chat.completions.create(
+        model="gpt-4o mini",
+        messages=[{
+            "role": "user",
+            "content": f"请用中文总结这篇新闻，控制在200字内：\n\n{news}"
+        }]
+    )
+    return response.choices[0].message.content
+
+if __name__ == "__main__":
+    try:
+        # 获取新闻内容
+        news = fetch_news()
+        
+        # 让GPT-4o-mini生成总结
+        summary = interpret_news(news)
+        
+        # 获取服务器推送的KEY
+        sckey = os.environ["SERVERPUSHKEY"]
+        
+        # URL编码处理
+        from urllib.parse import quote
+        encoded_msg = quote(f"新闻摘要：\n{summary}")
+        
+        # 发送到微信
+        requests.get(
+            f"https://sc.ftqq.com/{sckey}.send",
+            params={
+                "text": "每日新闻摘要",
+                "desp": encoded_msg  # 发送给微信的新闻摘要
+            }
+        )
+    except Exception as e:
+        print(f"程序执行失败: {str(e)}")
+        raise
